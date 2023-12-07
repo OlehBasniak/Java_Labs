@@ -1,9 +1,33 @@
-package L2;
+package L5;
 
+import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
 
-abstract class Literature {
+// Оператори зберігання та зчитування даних у тексовий файл
+class FileHandler {
+    public static void saveData(List<? extends Serializable> data, String filename) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            outputStream.writeObject(data);
+            System.out.println("Data saved successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<? extends Serializable> loadData(String filename) {
+        List<? extends Serializable> data = new ArrayList<>();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename))) {
+            data = (List<? extends Serializable>) inputStream.readObject();
+            System.out.println("Data loaded successfully.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+}
+
+abstract class Literature implements Serializable {
     private String title;
     private String author;
     private LocalDate publicationDate;
@@ -16,7 +40,6 @@ abstract class Literature {
         this.type = type;
     }
 
-    // Гетери і сетери для полів класу
     public String getTitle() {
         return title;
     }
@@ -33,8 +56,18 @@ abstract class Literature {
         return type;
     }
 
-    // Абстрактний метод для отримання опису літератури
     public abstract String getDescription();
+
+    // Збереження літератури у тексовий файл
+    public static void saveLiteratureToFile(List<Literature> literatureList, String filename) {
+        FileHandler.saveData(literatureList, filename);
+    }
+
+    // Зчитування літератури з тексового файлу
+    public static List<Literature> loadLiteratureFromFile(String filename) {
+        List<Literature> literatureList = (List<Literature>) FileHandler.loadData(filename);
+        return literatureList != null ? literatureList : new ArrayList<>();
+    }
 }
 
 class Book extends Literature {
@@ -59,7 +92,6 @@ class Article extends Literature {
     }
 }
 
-// Основні класи для персон
 class Person {
     private String name;
     private LocalDate dateOfBirth;
@@ -175,47 +207,60 @@ class Library {
     }
 }
 
-// Клас для демонстрації використання бібліотеки
 public class LibraryProgram {
+    private static final String LITERATURE_FILE = "literature.txt";
+
     public static void main(String[] args) {
-        // Створення завідувача
-        Librarian librarian = new Librarian("Іван Іванович Іванов", LocalDate.of(1970, 1, 1));
-        Library library = new Library(librarian);
+            // Створення завідувача
+            Librarian librarian = new Librarian("Іван Іванович Іванов", LocalDate.of(1970, 1, 1));
+            Library library = new Library(librarian);
 
-        // Додавання літератури до бібліотеки
-        library.addLiterature(new Book("Війна і мир", "Лев Толстой", LocalDate.of(1869, 1, 1)));
-        library.addLiterature(new Article("Філософія Java", "Еккель Брюс", LocalDate.of(2002, 5, 20)));
+            // Додавання літератури до бібліотеки
+            library.addLiterature(new Book("Війна і мир", "Лев Толстой", LocalDate.of(1869, 1, 1)));
+            library.addLiterature(new Article("Філософія Java", "Еккель Брюс", LocalDate.of(2002, 5, 20)));
 
-        // Створення та додавання клієнтів
-        Client client1 = new Client("Петро Петрович Петров", LocalDate.of(1985, 5, 20));
-        Client client2 = new Client("Олександра Олександрівна Ковальчук", LocalDate.of(1992, 8, 15));
-        library.addClient(client1);
-        library.addClient(client2);
+            // Створення та додавання клієнтів
+            Client client1 = new Client("Петро Петрович Петров", LocalDate.of(1985, 5, 20));
+            Client client2 = new Client("Олександра Олександрівна Ковальчук", LocalDate.of(1992, 8, 15));
+            library.addClient(client1);
+            library.addClient(client2);
 
-        // Клієнти беруть літературу
-        client1.borrowLiterature(library.getLiteratureList().get(0), LocalDate.now(), LocalDate.now().plusWeeks(2));
-        client2.borrowLiterature(library.getLiteratureList().get(1), LocalDate.now(), LocalDate.now().plusDays(30));
+            // Клієнти беруть літературу
+            client1.borrowLiterature(library.getLiteratureList().get(0), LocalDate.now(), LocalDate.now().plusWeeks(2));
+            client2.borrowLiterature(library.getLiteratureList().get(1), LocalDate.now(), LocalDate.now().plusDays(30));
 
-        // Сортування та виведення списків
-        System.out.println("Література, відсортована за автором:");
-        library.sortLiteratureByAuthor();
-        library.printLiteratureList();
+            // Сортування та виведення списків
+            System.out.println("Література, відсортована за автором:");
+            library.sortLiteratureByAuthor();
+            library.printLiteratureList();
 
-        System.out.println("\nЛітература, відсортована за типом:");
-        library.sortLiteratureByType();
-        library.printLiteratureList();
+            System.out.println("\nЛітература, відсортована за типом:");
+            library.sortLiteratureByType();
+            library.printLiteratureList();
 
-        System.out.println("\nЛітература, відсортована за датою публікації:");
-        library.sortLiteratureByPublicationDate();
-        library.printLiteratureList();
+            System.out.println("\nЛітература, відсортована за датою публікації:");
+            library.sortLiteratureByPublicationDate();
+            library.printLiteratureList();
 
-        System.out.println("\nЧитачі, відсортовані за кількістю прочитаної літератури:");
-        library.sortClientsByReadLiteratureCount();
-        library.printClients();
+            System.out.println("\nЧитачі, відсортовані за кількістю прочитаної літератури:");
+            library.sortClientsByReadLiteratureCount();
+            library.printClients();
 
-        // Знайти читача з найбільшою кількістю прочитаної літератури
-        Client mostActiveReader = library.findMostLiteratureReadClient();
-        System.out.printf("\nЧитач з найбільшою кількістю прочитаної літератури: %s, прочитано %d книг.\n",
-                mostActiveReader.getName(), mostActiveReader.getReadLiteratureCount());
+            // Знайти читача з найбільшою кількістю прочитаної літератури
+            Client mostActiveReader = library.findMostLiteratureReadClient();
+            System.out.printf("\nЧитач з найбільшою кількістю прочитаної літератури: %s, прочитано %d книг.\n",
+                    mostActiveReader.getName(), mostActiveReader.getReadLiteratureCount());
+
+        // Зберігання літератури у тексовий файл
+        Literature.saveLiteratureToFile(library.getLiteratureList(), LITERATURE_FILE);
+
+        // Зчитування літератури з тексового файлу
+        List<Literature> loadedLiterature = Literature.loadLiteratureFromFile(LITERATURE_FILE);
+
+        // Демонстрація роботи з зчитаною літературою
+        System.out.println("\nЛітература, зчитана з файлу:");
+        for (Literature literature : loadedLiterature) {
+            System.out.println(literature.getDescription());
+        }
     }
 }
